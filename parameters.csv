@@ -1,0 +1,13 @@
+mass,300
+torque,150
+gear_ratio,4
+transmission_eff,0.98
+static_tire_radius,0.3 
+mue,1.2
+drag_coef,1.5
+lift_coef,-2
+frontal_area,1.7
+CG_height,0.2
+wheelbase_length,1.8
+weight_dist,0.5
+cp_location,0.5
