@@ -1,5 +1,6 @@
 ### Private files
-private/
+private
+logs
 
 ### Python related
 # Byte-compiled / optimized / DLL files
