@@ -1,11 +1,11 @@
 import csv
 import pytest
 
-from pathlib import Path
 
 from vehicle import Vehicle
 
 TEST_DATA_FILE = "data/standard_parameters.csv"
+
 
 @pytest.fixture
 def ElectFSAE():
@@ -20,10 +20,8 @@ def test_init_from_file(ElectFSAE):
         p = {}
         reader = csv.reader(file)
         for row in reader:
-                p[row[0]] = row[1]
-        
-    acc = float(p["mue"]) * 9.807 
+            p[row[0]] = row[1]
 
-    assert ElectFSAE.get_acceleration() == pytest.approx(acc)
+    acc = float(p["mue"]) * 9.807
 
-
+    assert ElectFSAE.acceleration == pytest.approx(acc)
