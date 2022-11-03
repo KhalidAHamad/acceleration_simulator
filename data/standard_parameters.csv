@@ -4,8 +4,8 @@ gear_ratio,4
 transmission_eff,0.98
 static_tire_radius,0.3 
 mue,1.2
-drag_coefficient,1.5
-lift_coefficient,-2
+drag_coefficient,2.5
+lift_coefficient,-1
 frontal_area,1.7
 CG_height,0.2
 wheelbase_length,1.8

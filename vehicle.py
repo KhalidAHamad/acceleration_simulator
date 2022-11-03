@@ -103,18 +103,40 @@ class Vehicle:
         assert len(self.velocity_vec) == len(self.position_vec)
         assert len(self.velocity_vec) == len(self.acceleration_vec)
 
-    def generate_plots(self):
+    def generate_plots(self, distance=None):
+        plt.style.use("seaborn")
         fig, ax = plt.subplots()
-        ax.plot(self.time_vec, self.position_vec, color="b")
-        ax.plot(self.time_vec, self.velocity_vec, color="r")
+        ax.plot(self.time_vec, self.position_vec, label="Position")#color="b", linewidth=2, )
+        ax.plot(self.time_vec, self.velocity_vec, label="Velocity")#color="g", linewidth=2
+        ax.plot(self.time_vec, self.acceleration_vec, label="Acceleration")#color="k", linewidth=2,
+         
+        if distance:
+            x, y = None, None
+            for t, p in zip(self.time_vec, self.position_vec):
+                print(t, p)
+                if p >= distance:
+                    x = t
+                    y = p
+                    break
+            ax.scatter(x, y, marker='X', s=100, color="r")
+            title_ = f"Vehicle finishes a distance of {y:.2f}m in {x:.2f}s"
+        else:
+            title_ = "Vehicle Position vs Time"
+
+        ax.set_title(title_)
+        ax.set_xlabel("Time, [s]")
+        ax.set_ylabel("Position, [m]")
+        ax.legend()
+        ax.grid(True)
+
         plt.show()
 
 
 
 def main():
     car = Vehicle.from_file()
-    car.simulate_acceleration(ti=0, tf=5, h=1)
-    car.generate_plots()
+    car.simulate_acceleration(ti=0, tf=5, h=0.001)
+    car.generate_plots(75)
 
 
 if __name__ == "__main__":
