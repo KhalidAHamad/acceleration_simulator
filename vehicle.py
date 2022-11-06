@@ -1,18 +1,31 @@
 import csv
 import logging
-import numpy as np
-import matplotlib.pyplot as plt
 
+import matplotlib.pyplot as plt
+import numpy as np
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
-# logger_formatter =
 logger_file_handler = logging.FileHandler("logs/vehicle.log", mode="w")
-formatter = logging.Formatter(fmt='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logger_file_handler.setFormatter(formatter)
-# logger_file_handler.setFormatter(logger_formatter)
+logger_formatter = logging.Formatter(
+    fmt="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
+logger_file_handler.setFormatter(logger_formatter)
 
 logger.addHandler(logger_file_handler)
+
+
+def euler(y_0, dy_dx, h):
+    """
+    A function to compute euler formula
+
+    :param y_0: value of y at the previous time step
+    :param dy_dx: the current rate of change
+    :param h: the time step
+    :returns: the value of y at the current time step
+    """
+
+    return y_0 + dy_dx * h
 
 
 class Vehicle:
@@ -61,7 +74,7 @@ class Vehicle:
         return acceleration
 
     def get_lift_force(self) -> float:
-        lift = 0.5 * self.RHO * self.f_area * self.lift_cof * (self.velocity ** 2)
+        lift = 0.5 * self.RHO * self.f_area * self.lift_cof * (self.velocity**2)
         logger.debug(
             "Lift force = "
             f"{0.5} * {self.RHO=} * {self.f_area=} * {self.lift_cof=} * {self.velocity=} = {lift}"
@@ -70,7 +83,7 @@ class Vehicle:
         return lift
 
     def get_drag_force(self) -> float:
-        drag = 0.5 * self.RHO * self.f_area * self.drag_cof * (self.velocity ** 2)
+        drag = 0.5 * self.RHO * self.f_area * self.drag_cof * (self.velocity**2)
         logger.debug(
             "Drag force = "
             f"{0.5} * {self.RHO=} * {self.f_area=} * {self.drag_cof=} * {self.velocity=} = {drag}"
@@ -92,11 +105,11 @@ class Vehicle:
         for _ in range(len(self.time_vec) - 1):
             acc = self.get_acceleration()
             self.acceleration_vec.append(acc)
-            self.velocity = self.velocity + acc * h
+            self.velocity = euler(self.velocity, acc, h)
             self.velocity_vec.append(self.velocity * 3.6)
-            self.position = self.position + self.velocity * h
+            self.position = euler(self.position, self.velocity, h)
             self.position_vec.append(self.position)
-        
+
         self.acceleration_vec.append(self.get_acceleration())
 
         # assert len(self.time_vec) == len(self.velocity_vec)
@@ -106,10 +119,16 @@ class Vehicle:
     def generate_plots(self, distance=None):
         plt.style.use("seaborn")
         fig, ax = plt.subplots()
-        ax.plot(self.time_vec, self.position_vec, label="Position")#color="b", linewidth=2, )
-        ax.plot(self.time_vec, self.velocity_vec, label="Velocity")#color="g", linewidth=2
-        ax.plot(self.time_vec, self.acceleration_vec, label="Acceleration")#color="k", linewidth=2,
-         
+        ax.plot(
+            self.time_vec, self.position_vec, label="Position"
+        )  # color="b", linewidth=2, )
+        ax.plot(
+            self.time_vec, self.velocity_vec, label="Velocity"
+        )  # color="g", linewidth=2
+        ax.plot(
+            self.time_vec, self.acceleration_vec, label="Acceleration"
+        )  # color="k", linewidth=2,
+
         if distance:
             x, y = None, None
             for t, p in zip(self.time_vec, self.position_vec):
@@ -118,7 +137,7 @@ class Vehicle:
                     x = t
                     y = p
                     break
-            ax.scatter(x, y, marker='X', s=100, color="r")
+            ax.scatter(x, y, marker="X", s=100, color="r")
             title_ = f"Vehicle finishes a distance of {y:.2f}m in {x:.2f}s"
         else:
             title_ = "Vehicle Position vs Time"
@@ -130,7 +149,6 @@ class Vehicle:
         ax.grid(True)
 
         plt.show()
-
 
 
 def main():
