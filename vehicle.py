@@ -18,8 +18,6 @@ logger.addHandler(logger_file_handler)
 def euler(
     y_0: float | int,
     dy_dx: float | int,
-    ti: float | int = 0,
-    tf: float | int = 5,
     h: float | int = 0.1,
 ) -> float | int:
     """
@@ -51,10 +49,10 @@ class Vehicle:
 
         ## calculating args
         self.weight = self.G * self.mass
-        self.velocity = 0
+        self.velocity = 0.0
         self.velocity_vec = [self.velocity]
         self.acceleration_vec = []
-        self.position = 0
+        self.position = 0.0
         self.position_vec = [self.position]
         self.time_vec = None
 
