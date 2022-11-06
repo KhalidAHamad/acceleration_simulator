@@ -5,6 +5,9 @@ import pytest
 
 from vehicle import Vehicle
 
+# Config parameters
+TEST_DATA_FILE = "data/standard_parameters.csv"
+
 # Setting up a logger
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -14,9 +17,6 @@ logger_formatter = logging.Formatter(
 )
 logger_file_handler.setFormatter(logger_formatter)
 logger.addHandler(logger_file_handler)
-
-# Config parameters
-TEST_DATA_FILE = "data/standard_parameters.csv"
 
 
 @pytest.fixture
@@ -29,34 +29,56 @@ def electFSAE():
 
 def test_init_from_file(electFSAE):
     with open(TEST_DATA_FILE) as file:
-        p = {}
+        csv_params = {}
         reader = csv.reader(file)
         for row in reader:
-            p[row[0]] = float(row[1])
+            csv_params[row[0]] = float(row[1])
 
+    vehicle_params = vars(electFSAE)
+    for key in csv_params:
+        if key in vehicle_params:
+            assert csv_params[key] == vehicle_params[key]
+        else:
+            logger.warning(f"{key} not found in Vehicle Parameters")
+
+
+def test_get_acceleration(electFSAE):
+    # helper function to compute velocity
+    def dv_dt(velocity):
+        acceleration = mue * g + (
+            (0.5 * 1.2 * A * (mue * C_df - C_d) * (velocity**2)) / mass
+        )
+
+        return acceleration
+
+    # Get the parameters needed to calculate the acceleration
+    mass = electFSAE.mass
     g = electFSAE.G
+    mue = electFSAE.mue
+    C_df = -electFSAE.lift_cof
+    C_d = electFSAE.drag_cof
+    A = electFSAE.f_area
+
+    # * acceleration when velocity = 0
     assert g == 9.807, "Gravitational acceleration is not the expected value"
-    acc = p["mue"] * g
+    acceleration_zero_velocity = mue * g
+    assert electFSAE.get_acceleration() == pytest.approx(acceleration_zero_velocity)
+    assert electFSAE.get_acceleration() == pytest.approx(dv_dt(0))
 
-    # v = 0, thus, F_drag and F_lift = 0
-    assert electFSAE.get_acceleration() == pytest.approx(acc)
-
-    # setting velocity equal to 1 and checking the calculations
-    v_test = 1
+    # * acceleration when velocity is a positive number
+    v_test = 1  # [m/s]
     electFSAE.velocity = v_test
-    C_df = -p["lift_coefficient"]
-    C_d = p["drag_coefficient"]
-    A = p["frontal_area"]
-    M = p["mass"]
-    acc_w_velocity = p["mue"] * g + (
-        (0.5 * 1.2 * A * (p["mue"] * C_df - C_d) * (v_test**2)) / M
-    )
-    logger.debug(
-        f"Value from Vehicle module = {electFSAE.get_acceleration()}"
-        f" Value from our calculations = {acc_w_velocity}"
-    )
-    logger.debug(f"{electFSAE.get_acceleration() is acc_w_velocity=}")
+    assert electFSAE.get_acceleration() == pytest.approx(dv_dt(v_test))
 
-    assert electFSAE.get_acceleration() == pytest.approx(
-        acc_w_velocity
-    ), "Acceleration is wrong when velocity is set"
+    v_test = 3
+    electFSAE.velocity = v_test
+    assert electFSAE.get_acceleration() == pytest.approx(dv_dt(v_test))
+
+    v_test = 55  # around ~200 kph
+    electFSAE.velocity = v_test
+    assert electFSAE.get_acceleration() == pytest.approx(dv_dt(v_test))
+
+    # ! this test fails at the current stage, investigate
+    # v_test = 200
+    # electFSAE.velocity = v_test
+    # assert electFSAE.get_acceleration() == pytest.approx(dv_dt(v_test))

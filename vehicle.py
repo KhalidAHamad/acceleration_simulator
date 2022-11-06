@@ -15,7 +15,13 @@ logger_file_handler.setFormatter(logger_formatter)
 logger.addHandler(logger_file_handler)
 
 
-def euler(y_0, dy_dx, h):
+def euler(
+    y_0: float | int,
+    dy_dx: float | int,
+    ti: float | int = 0,
+    tf: float | int = 5,
+    h: float | int = 0.1,
+) -> float | int:
     """
     A function to compute euler formula
 
@@ -24,6 +30,7 @@ def euler(y_0, dy_dx, h):
     :param h: the time step
     :returns: the value of y at the current time step
     """
+    # n =
 
     return y_0 + dy_dx * h
 
@@ -38,9 +45,9 @@ class Vehicle:
         self.mass = kwargs["mass"]
         self.mue = kwargs["mue"]  # coefficient of friction
         # aero
-        self.f_area = kwargs["frontal_area"]
-        self.drag_cof = kwargs["drag_coefficient"]
-        self.lift_cof = kwargs["lift_coefficient"]
+        self.f_area = kwargs["f_area"]
+        self.drag_cof = kwargs["drag_cof"]
+        self.lift_cof = kwargs["lift_cof"]
 
         ## calculating args
         self.weight = self.G * self.mass
@@ -62,15 +69,20 @@ class Vehicle:
 
         return cls(**parameters)
 
+    def get_friction_force(self) -> float:
+        if not (self.lift_cof and self.f_area):
+            return self.mue * self.weight
+        else:
+            downforce = -self.get_lift_force()
+            assert downforce >= 0, "Downforce should be a positive number."
+            normal_force = self.weight + downforce
+            assert normal_force >= 0, "Normal force should be a positive number."
+            return self.mue * normal_force
+
     def get_acceleration(self) -> float:
-        # F_normal = W + F_downforce
-        normal_force = self.weight - self.get_lift_force()
-        # F_friction = mue * F_normal
-        friction_force = self.mue * normal_force  # tractive frictional forces
-        # acceleration = sum_of_forces(F_friction - F_drag) / self.mass
-        acceleration = (friction_force - self.get_drag_force()) / self.mass
+        acceleration = (self.get_friction_force() - self.get_drag_force()) / self.mass
         assert acceleration >= 0, "Acceleration should be either 0 or a positive number"
-        logger.info(f"{normal_force=} {friction_force=} {acceleration=}")
+        logger.info(f"{self.get_friction_force()=} {acceleration=}")
         return acceleration
 
     def get_lift_force(self) -> float:
@@ -132,7 +144,6 @@ class Vehicle:
         if distance:
             x, y = None, None
             for t, p in zip(self.time_vec, self.position_vec):
-                print(t, p)
                 if p >= distance:
                     x = t
                     y = p
