@@ -1,12 +1,12 @@
 mass,300
-torque,150
-t_ratio,4
-t_eff,0.98
-static_t_radius,0.3 
+torque_max,32
+trans_ratio,3
+trans_eff,0.98
+static_tire_radius,0.31
 mue,1.4
 drag_cof,2.5
 lift_cof,-1
-f_area,1.7
+frontal_area,1.7
 cg_height,0.2
 wb_length,1.8
 weight_dist,0.5
