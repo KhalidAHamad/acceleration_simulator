@@ -1,3 +1,6 @@
+"""
+INVESTIGATE: do electric powertrains have  a final drive ratio?
+"""
 import csv
 import logging
 
@@ -36,14 +39,21 @@ def euler(
 class Vehicle:
     G = 9.807  # Gravitational acceleration
     RHO = 1.2  # Air density
-    # rolling_coef = 0.98             # used to estimate tire's rolling radius
+    ROLLING_RADIUS_COF = 0.98  # used to estimate tire's rolling radius
 
     def __init__(self, **kwargs):
-        # Chassis and Tire Parameters
+        # Powertrain parameters
+        self.torque_max = kwargs["torque_max"]
+        self.trans_ratio = kwargs["trans_ratio"]
+        self.trans_eff = kwargs["trans_eff"]
+        # Chassis and tire parameters
         self.mass = kwargs["mass"]
         self.mue = kwargs["mue"]  # coefficient of friction
+        self.tire_rolling_radius = (
+            kwargs["static_tire_radius"] * self.ROLLING_RADIUS_COF
+        )
         # aero
-        self.f_area = kwargs["f_area"]
+        self.frontal_area = kwargs["frontal_area"]
         self.drag_cof = kwargs["drag_cof"]
         self.lift_cof = kwargs["lift_cof"]
 
@@ -67,8 +77,21 @@ class Vehicle:
 
         return cls(**parameters)
 
+    def get_motor_tractive_force(self):
+        """Computes the current tractive force produced by the motor
+
+        Args:
+            arg (arg type): arg description
+
+        Returns:
+            return type: description
+        """
+        return (
+            self.torque_max * self.trans_ratio * self.trans_eff
+        ) / self.tire_rolling_radius
+
     def get_friction_force(self) -> float:
-        if not (self.lift_cof and self.f_area):
+        if not (self.lift_cof and self.frontal_area):
             return self.mue * self.weight
         else:
             downforce = -self.get_lift_force()
@@ -84,25 +107,25 @@ class Vehicle:
         return acceleration
 
     def get_lift_force(self) -> float:
-        lift = 0.5 * self.RHO * self.f_area * self.lift_cof * (self.velocity**2)
+        lift = 0.5 * self.RHO * self.frontal_area * self.lift_cof * (self.velocity**2)
         logger.debug(
             "Lift force = "
-            f"{0.5} * {self.RHO=} * {self.f_area=} * {self.lift_cof=} * {self.velocity=} = {lift}"
+            f"{0.5} * {self.RHO=} * {self.frontal_area=} * {self.lift_cof=} * {self.velocity=} = {lift}"
         )
         assert lift <= 0, "Lift force is expected to be a negative number"
         return lift
 
     def get_drag_force(self) -> float:
-        drag = 0.5 * self.RHO * self.f_area * self.drag_cof * (self.velocity**2)
+        drag = 0.5 * self.RHO * self.frontal_area * self.drag_cof * (self.velocity**2)
         logger.debug(
             "Drag force = "
-            f"{0.5} * {self.RHO=} * {self.f_area=} * {self.drag_cof=} * {self.velocity=} = {drag}"
+            f"{0.5} * {self.RHO=} * {self.frontal_area=} * {self.drag_cof=} * {self.velocity=} = {drag}"
         )
         assert drag >= 0, "Drag force is a negative number"
         if drag == 0:
             logger.warning(
                 "Drag force is equal to zero, "
-                f"{0.5=} * {self.RHO=} * {self.f_area=} * {self.drag_cof=} * {self.velocity=}"
+                f"{0.5=} * {self.RHO=} * {self.frontal_area=} * {self.drag_cof=} * {self.velocity=}"
             )
         return drag
 
@@ -122,7 +145,7 @@ class Vehicle:
 
         self.acceleration_vec.append(self.get_acceleration())
 
-        # assert len(self.time_vec) == len(self.velocity_vec)
+        assert len(self.velocity_vec) == len(self.velocity_vec)
         assert len(self.velocity_vec) == len(self.position_vec)
         assert len(self.velocity_vec) == len(self.acceleration_vec)
 
@@ -162,7 +185,7 @@ class Vehicle:
 
 def main():
     car = Vehicle.from_file()
-    car.simulate_acceleration(ti=0, tf=5, h=0.001)
+    car.simulate_acceleration(ti=0, tf=5, h=0.1)
     car.generate_plots(75)
 
 

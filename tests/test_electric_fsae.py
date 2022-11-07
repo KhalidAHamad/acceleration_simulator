@@ -42,6 +42,13 @@ def test_init_from_file(electFSAE):
             logger.warning(f"{key} not found in Vehicle Parameters")
 
 
+def test_get_motor_tractive_force(electFSAE):
+    """The motor tractive force is equal to the lowest of the torque-related and
+    power-related forces.
+    """
+    assert electFSAE.get_motor_tractive_force() == pytest.approx(32 * 3 * 0.98 / 0.3038)
+
+
 def test_get_acceleration(electFSAE):
     # helper function to compute velocity
     def dv_dt(velocity):
@@ -57,7 +64,7 @@ def test_get_acceleration(electFSAE):
     mue = electFSAE.mue
     C_df = -electFSAE.lift_cof
     C_d = electFSAE.drag_cof
-    A = electFSAE.f_area
+    A = electFSAE.frontal_area
 
     # * acceleration when velocity = 0
     assert g == 9.807, "Gravitational acceleration is not the expected value"
